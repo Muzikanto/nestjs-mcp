@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { IMcpTool } from './decorators/mcp-tool.decorator';
+import Ajv from 'ajv';
 
 export interface McpMessage {
   type: string;
@@ -15,7 +16,8 @@ export interface McpResponse {
 @Injectable()
 export class McpService implements OnModuleInit {
   private tools = new Map<string, IMcpTool>();
-
+  private ajv = new Ajv();
+  
   onModuleInit() {
     // console.log('MCP Service initialized');
   }
@@ -43,6 +45,16 @@ export class McpService implements OnModuleInit {
   
     if (!tool) {
       return { success: false, error: `Unknown tool: ${msg.type}` };
+    }
+
+    // Валидация через AJV, если есть inputSchema
+    if (tool.inputSchema) {
+      const validate = this.ajv.compile(tool.inputSchema);
+      const valid = validate(msg.payload);
+
+      if (!valid) {
+        return { success: false, error: this.ajv.errorsText(validate.errors) };
+      }
     }
 
     try {
