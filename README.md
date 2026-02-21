@@ -54,9 +54,9 @@ import { McpTool } from '@muzikanto/nestjs-mcp';
 @McpTool('paymentTool')
 @Injectable()
 export class PaymentTool {
-  static inputSchema = z.object({
-    cartId: z.string().describe('The cart ID to confirm'),
-  });
+  static inputSchema = {
+    cartId: { type: 'string', description: 'ID корзины' },
+  };
 
   async execute(input: { cartId: string }) {
     return { status: 'confirmed', cartId: input.cartId };

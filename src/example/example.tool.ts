@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { z } from 'zod';
 import { IMcpTool, McpTool } from '../decorators/mcp-tool.decorator';
 
 @McpTool('example')
@@ -7,9 +6,9 @@ import { IMcpTool, McpTool } from '../decorators/mcp-tool.decorator';
 export class PaymentTool implements IMcpTool {
   name = 'example';
 
-  static inputSchema = z.object({
-    cartId: z.string().describe('ID'),
-  });
+  static inputSchema = {
+    cartId: { type: 'string', description: 'ID корзины' },
+  };
 
   async execute(input: { cartId: string }) {
     return { status: 'confirmed', cartId: input.cartId };

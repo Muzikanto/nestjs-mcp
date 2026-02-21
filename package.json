@@ -21,15 +21,11 @@
   },
   "peerDependencies": {
     "@nestjs/common": "^10 || ^11",
-    "@nestjs/core": "^10 || ^11"
+    "@nestjs/core": "^10 || ^11",
+    "reflect-metadata": "^0.1.13"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.26.0",
-    "@nestjs/common": "^11.1.14",
-    "@nestjs/core": "^11.1.14",
-    "openai": "^6.22.0",
-    "reflect-metadata": "^0.1.13",
-    "zod": "^4.3.6"
+    "@modelcontextprotocol/sdk": "^1.26.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
