@@ -54,7 +54,11 @@ export class GetCurrentDate implements IMcpTool<{ country: string; }, { date: st
   name = 'get-date';
 
   inputSchema = {
-    country: { type: 'string', description: 'Страна' },
+    "type": "object",
+    "properties": {
+      "country": { "type": "string", "description": "Country" }
+    },
+    "required": ["country"]
   };
 
   async execute(input: { country: string }) {
