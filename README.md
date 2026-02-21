@@ -47,21 +47,18 @@ export class AppModule {}
 ### Создание MCP tool
 
 ```ts
-import { Injectable } from '@nestjs/common';
-import { z } from 'zod';
-import { McpTool, IMcpTool } from '@muzikanto/nestjs-mcp';
+import { IMcpTool, McpTool } from '../decorators/mcp-tool.decorator';
 
 @McpTool()
-@Injectable()
-export class PaymentTool implements IMcpTool<{ cartId: string; }, { status: string, cartId: string }> {
-  name = 'paymentTool';
+export class GetCurrentDate implements IMcpTool<{ country: string; }, { date: string }> {
+  name = 'get-date';
 
   inputSchema = {
-    cartId: { type: 'string', description: 'ID корзины' },
+    country: { type: 'string', description: 'Страна' },
   };
 
-  async execute(input: { cartId: string }) {
-    return { status: 'confirmed', cartId: input.cartId };
+  async execute(input: { country: string }) {
+    return { date: new Date().toLocaleString() };
   }
 }
 ```
