@@ -17,7 +17,7 @@ export class McpService implements OnModuleInit {
   private tools = new Map<string, IMcpTool>();
 
   onModuleInit() {
-    console.log('MCP Service initialized');
+    // console.log('MCP Service initialized');
   }
 
    /**
@@ -33,7 +33,6 @@ export class McpService implements OnModuleInit {
 
   registerTool(name: string, handler: IMcpTool) {
     this.tools.set(name, handler);
-    console.log(`Tool registered: ${name}`);
   }
 
   /**
