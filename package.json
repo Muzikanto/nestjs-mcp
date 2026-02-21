@@ -1,18 +1,15 @@
 {
   "name": "@muzikanto/nestjs-mcp",
-  "version": "1.0.0",
-  "description": "Model Context Protocol integration for NestJS",
+  "version": "1.0.1",
+  "description": "NestJS MCP (Model Context Protocol) module for creating tools for LLM or HTTP with validation, decorators, and OpenAI Function Calls integration.",
   "keywords": [
     "nestjs",
+    "nestjs module",
     "mcp",
-    "ai",
-    "model-context-protocol"
-  ],
-  "license": "MIT",
-  "maintainers": [
-    {
-      "name": "Maxim Schiriy"
-    }
+    "openai",
+    "llm",
+    "tools",
+    "typescript"
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,7 +18,10 @@
   ],
   "scripts": {
     "build": "tsc",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "ch": "changeset",
+    "vers": "changeset version",
+    "pub": "changeset publish"
   },
   "peerDependencies": {
     "@nestjs/common": "^10 || ^11",
@@ -34,6 +34,7 @@
     "ajv": "^8.18.0"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.8",
     "@nestjs/common": "^10 || ^11",
     "@nestjs/core": "^10 || ^11",
     "@nestjs/swagger": "^10 || ^11",
@@ -41,5 +42,15 @@
     "prettier": "^3.8.1",
     "reflect-metadata": "^0.1.13",
     "typescript": "^5.0.0"
+  },
+  "license": "MIT",
+  "maintainers": [
+    {
+      "name": "Maxim Schiriy"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Muzikanto/nestjs-mcp"
   }
 }
