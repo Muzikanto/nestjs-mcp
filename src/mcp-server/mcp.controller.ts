@@ -63,8 +63,10 @@ export class McpController {
     status: 200,
     description: "Mcp protocol result",
   })
-  async handleMessages(@Body() body: any, @Request() request: Request) {
+  async handleMessages(@Body() body: any, @Request() request: Request, @Context() context: ExecutionContext) {
     try {
+      await this.checkGuard(context);
+
       if (body.method === "tools/call") {
         const result = await this.service.sendMessage(
           { type: body.params.name, payload: body.params.arguments },
