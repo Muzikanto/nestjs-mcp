@@ -10,29 +10,29 @@ export class McpClientService {
 
   // Получить все инструменты
   async getAllTools(): Promise<McpToolsDto> {
-    const response = await this.httpService.get("/mcp").toPromise();
+    const response = await this.httpService.get("/mcp/tools").toPromise();
     return response.data;
   }
 
   // Получить все подсказки
   async getAllPrompts(): Promise<McpPromptsDto> {
-    const response = await this.httpService.get("/prompts").toPromise();
+    const response = await this.httpService.get("/mcp/prompts").toPromise();
     return response.data;
   }
 
   // Получить подсказку по имени
-  async getPromptByName(
+  async getPromptByName<Payload = any>(
     promptName: string,
-    params: any,
+    params: Payload,
   ): Promise<McpPromptMessagesDto> {
     const response = await this.httpService
-      .post(`/prompts/${promptName}`, params)
+      .post(`/mcp/prompts/${promptName}`, params)
       .toPromise();
     return response.data;
   }
 
   // Вызвать инструмент MCP
-  async callMcpTool<Payload, Result>(
+  async callMcpTool<Payload = any, Result = any>(
     toolName: string,
     payload: Payload,
   ): Promise<Result> {
