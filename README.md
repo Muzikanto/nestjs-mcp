@@ -29,6 +29,7 @@ NestJS MCP (Model Context Protocol) module — allows you to create “tools” 
 - Register MCP prompts using the `@McpPrompt()` decorator
 - Automatic detection of all providers (tools) in the module
 - Input data validation
+- HTTP endpoint for MCP (`GET /mcp`, `POST /mcp/messages`)  
 - HTTP endpoint for calling tools (`POST /mcp/toos`)  
 - Endpoint for a list of all tools (`GET /mcp/tools`)  
 - Endpoint for a list of all prompts (`GET /mcp/prompts`)  

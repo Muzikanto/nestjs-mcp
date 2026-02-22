@@ -10,6 +10,7 @@ import {
   Inject,
   CanActivate,
   ForbiddenException,
+  Query,
 } from "@nestjs/common";
 import { McpService } from "./mcp.service";
 import { McpMessageDto } from "./dto/McpMessage.dto";
@@ -34,7 +35,7 @@ export class McpController {
     @Inject(MCP_GUARD) private readonly guard: CanActivate,
   ) {}
 
-  @Post("/")
+  @Get("/")
   @ApiOperation({
     summary: "Request mcp info",
   })
@@ -42,10 +43,10 @@ export class McpController {
     status: 200,
     description: "Mcp info result",
   })
-  async handleMcp(@Body() body: any) {
+  async handleMcp(@Query() query: any) {
     return {
-      jsonrpc: body.jsonrpc,
-      id: body.id,
+      jsonrpc: query.jsonrpc,
+      id: query.id,
       result: {
         name: "nestjs-mcp",
         version: "1.0.0",
