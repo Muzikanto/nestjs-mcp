@@ -12,7 +12,7 @@ export class McpClientModule {
   static forRoot(metadata: {
     useValue?: IMcpClientConfig;
     useExisting?: Type<IMcpClientConfig>;
-    useFactory?: (...args: any) => IMcpClientConfig;
+    useFactory?: (...args: any) => IMcpClientConfig | Promise<IMcpClientConfig>;
   }) {
     const configProvider: Provider<IMcpClientConfig> = {
       provide: MCP_CLIENT_CONFIG,
