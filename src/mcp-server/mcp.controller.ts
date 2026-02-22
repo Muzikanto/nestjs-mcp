@@ -34,7 +34,109 @@ export class McpController {
     @Inject(MCP_GUARD) private readonly guard: CanActivate,
   ) {}
 
-  @Post()
+  @Post("/")
+  @ApiOperation({
+    summary: "Request mcp info",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Mcp info result",
+  })
+  async handleMcp(@Body() body: any) {
+    return {
+      jsonrpc: body.jsonrpc,
+      id: body.id,
+      result: {
+        name: "nestjs-mcp",
+        version: "1.0.0",
+        capabilities: ["http"],
+      },
+    };
+  }
+
+  @Post("/messages")
+  @ApiOperation({
+    summary: "Request mcp protocol",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Mcp protocol result",
+  })
+  async handleMessages(@Body() body: any, @Request() request: Request) {
+    try {
+      if (body.method === "tools/call") {
+        const result = await this.service.sendMessage(
+          { type: body.params.name, payload: body.params.arguments },
+          { request },
+        );
+
+        return {
+          jsonrpc: body.jsonrpc,
+          id: body.id,
+          result,
+        };
+      }
+      if (body.method === "tools/list") {
+        const tools = await this.service.listTools();
+
+        return {
+          jsonrpc: body.jsonrpc,
+          id: body.id,
+          result: {
+            tools: tools.map((el) => ({
+              name: el.name,
+              description: el.description,
+              inputSchema: el.parameters,
+            })),
+          },
+        };
+      }
+      if (body.method === "prompts/list") {
+        const prompts = await this.service.listPrompts();
+
+        return {
+          jsonrpc: body.jsonrpc,
+          id: body.id,
+          result: {
+            prompts: prompts.map((el) => ({
+              name: el.name,
+              description: el.description,
+            })),
+          },
+        };
+      }
+      if (body.method === "prompts/run") {
+        const messages = await this.service.getPrompt(
+          body.params.name,
+          body.params.arguments,
+        );
+
+        return {
+          jsonrpc: body.jsonrpc,
+          id: body.id,
+          result: {
+            messages,
+          },
+        };
+      }
+    } catch (e) {
+      return {
+        jsonrpc: body.jsonrpc,
+        id: body.id,
+        error: {
+          code: -32000,
+          message: (e as Error).message,
+        },
+      };
+    }
+
+    return {
+      jsonrpc: body.jsonrpc,
+      id: body.id,
+    };
+  }
+
+  @Post("/tools")
   @Header("Content-Type", "application/json")
   @ApiOperation({
     summary: "Request tool",
@@ -49,7 +151,7 @@ export class McpController {
   @ApiForbiddenResponse({
     description: "No access to method",
   })
-  async handle(
+  async handleTool(
     @Body() body: McpMessageDto,
     @Request() request: any,
     @Context() context: ExecutionContext,

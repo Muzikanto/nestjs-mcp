@@ -29,7 +29,7 @@ NestJS MCP (Model Context Protocol) module — allows you to create “tools” 
 - Register MCP prompts using the `@McpPrompt()` decorator
 - Automatic detection of all providers (tools) in the module
 - Input data validation
-- HTTP endpoint for calling tools (`POST /mcp`)  
+- HTTP endpoint for calling tools (`POST /mcp/toos`)  
 - Endpoint for a list of all tools (`GET /mcp/tools`)  
 - Endpoint for a list of all prompts (`GET /mcp/prompts`)  
 - Endpoint for prompt (`POST /mcp/prompts/:name`)  
@@ -265,7 +265,6 @@ export class AppModule {}
 import axios from 'axios';
 import OpenAI from 'openai';
 
-const MCP_URL = 'http://localhost:3000/mcp';
 const MCP_TOOLS_URL = 'http://localhost:3000/mcp/tools';
 const MCP_TELEGRAM_PROMPT_URL = 'http://localhost:3000/mcp/prompts/telegram_auto_reply';
 
@@ -293,7 +292,7 @@ async function getMcpPrompt() {
  */
 async function callMcpTool(toolName: string, payload: Record<string, any>) {
   const response = await axios.post(
-    MCP_URL,
+    MCP_TOOLS_URL,
     { type: toolName, payload },
     { headers: { 'Content-Type': 'application/json' } }
   );

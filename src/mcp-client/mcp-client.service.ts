@@ -38,7 +38,7 @@ export class McpClientService {
   ): Promise<Result> {
     const response = await this.httpService
       .post(
-        "/mcp",
+        "/mcp/tools",
         { type: toolName, payload },
         { headers: { "Content-Type": "application/json" } },
       )
