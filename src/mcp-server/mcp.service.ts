@@ -1,5 +1,5 @@
-import { Injectable, NotFoundException, OnModuleInit } from "@nestjs/common";
-import { IMcpTool, IMcpToolContext } from "./decorators/mcp-tool.decorator";
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, OnModuleInit } from "@nestjs/common";
+import { IMcpTool } from "./decorators/mcp-tool.decorator";
 import Ajv from "ajv";
 import { IMcpPrompt } from "./decorators/mcp-prompt.decorator";
 import {
@@ -10,7 +10,6 @@ import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { zodToJsonSchema } from "./utils/zod";
 import { IRequest, IResponse } from "./utils/http-adapter";
 import { IMcpResource } from "./decorators/mcp-resource.decorator";
-import { IMcpConfig, InjectMcpConfig } from "./config";
 
 export interface McpMessage {
   type: string;
@@ -52,7 +51,7 @@ export class McpService implements OnModuleInit {
       const server = this.createServer();
       await server.connect(transport);
     } catch (e) {
-      res.status(500).send("Failed to initialize session");
+      res.send(500, "Failed to initialize session");
     }
   }
 
@@ -63,7 +62,7 @@ export class McpService implements OnModuleInit {
     if (transport) {
       await transport.handlePostMessage(req.original, res.original, req.body);
     } else {
-      res.status(500).send("Failed to handle message");
+      res.send(500, "Failed to handle message");
     }
   }
 
@@ -126,12 +125,11 @@ export class McpService implements OnModuleInit {
    */
   async sendMessage(
     msg: { type: string; payload: any },
-    context: IMcpToolContext,
   ) {
     const tool = this.tools.get(msg.type);
 
     if (!tool) {
-      return { success: false, error: `Unknown tool: "${msg.type}"` };
+      throw new NotFoundException(`Unknown tool: "${msg.type}"`)
     }
 
     // Валидация через AJV, если есть inputSchema
@@ -141,16 +139,16 @@ export class McpService implements OnModuleInit {
       const valid = validate(msg.payload);
 
       if (!valid) {
-        return { success: false, error: this.ajv.errorsText(validate.errors) };
+        throw new BadRequestException(this.ajv.errorsText(validate.errors))
       }
     }
 
     try {
-      const result = await tool.execute(msg.payload, context);
+      const result = await tool.execute(msg.payload);
 
-      return { success: true, data: result };
+      return result;
     } catch (err: any) {
-      return { success: false, error: err.message };
+      throw new InternalServerErrorException('Failed to execute tool');
     }
   }
 
@@ -169,7 +167,6 @@ export class McpService implements OnModuleInit {
           try {
             const result = await tool.execute(
               { ...params },
-              { request: undefined },
             );
 
             return {

@@ -44,7 +44,9 @@ export class McpController {
   @ApiOperation({
     summary: "Request tool sse",
   })
-  async handleSse(@Req() rawReq: any, @Res() rawRes: any) {
+  async handleSse(@Req() rawReq: any, @Res() rawRes: any, @Context() context: ExecutionContext,) {
+    await this.checkGuard(context);
+
     const request = this.config.httpAdapter.getRequest(rawReq);
     const response = this.config.httpAdapter.getResponse(rawRes);
     await this.service.handleSse(request, response);
@@ -54,7 +56,9 @@ export class McpController {
   @ApiOperation({
     summary: "Handle sse",
   })
-  async handleSseMessages(@Req() rawReq: any, @Res() rawRes: any) {
+  async handleSseMessages(@Req() rawReq: any, @Res() rawRes: any, @Context() context: ExecutionContext,) {
+    await this.checkGuard(context);
+
     const request = this.config.httpAdapter.getRequest(rawReq);
     const response = this.config.httpAdapter.getResponse(rawRes);
     await this.service.handleSseMessage(request, response);
@@ -82,7 +86,7 @@ export class McpController {
   ) {
     await this.checkGuard(context);
 
-    return this.service.sendMessage(body, { request });
+    return this.service.sendMessage(body);
   }
 
   @Get("tools")
