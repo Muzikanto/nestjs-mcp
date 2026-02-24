@@ -5,7 +5,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/Muzikanto/nestjs-mcp?style=social)](https://github.com/Muzikanto/nestjs-mcp)
 [![License](https://img.shields.io/npm/l/@muzikanto/nestjs-mcp)](https://github.com/Muzikanto/nestjs-mcp/blob/main/LICENSE)
 
-NestJS MCP (Model Context Protocol) module — allows you to create “tools” (functions) for LLM or HTTP, with automatic detection via decorators, validation, and integration with OpenAI Function Calls.
+NestJS MCP (Model Context Protocol) module — allows you to create “tools”, “prompts”, “resources” for LLM or HTTP, with automatic detection via decorators, validation, and integration with OpenAI Function Calls.
 
 ---
 

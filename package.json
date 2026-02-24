@@ -1,6 +1,6 @@
 {
   "name": "@muzikanto/nestjs-mcp",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "NestJS MCP (Model Context Protocol) module for creating tools for LLM or HTTP with validation, decorators, and OpenAI Function Calls integration.",
   "keywords": [
     "nestjs",

@@ -1,5 +1,11 @@
 # @muzikanto/nestjs-mcp
 
+## 1.2.0
+
+### Minor Changes
+
+- bb282b4: Add resource decorator, move http controllers routes
+
 ## 1.1.1
 
 ### Patch Changes
