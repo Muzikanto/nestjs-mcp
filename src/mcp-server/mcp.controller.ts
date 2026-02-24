@@ -29,29 +29,35 @@ import { McpPromptsDto } from "./dto/McpPrompts.dto";
 import { McpPromptMessagesDto } from "./dto/McpPromptMessages.dto";
 import { Context } from "./utils/context.decorator";
 import { MCP_GUARD } from "./utils/inject-tokens";
-import { IRequest, IResponse } from "./utils/http";
+import { IRequest, IResponse } from "./utils/http-adapter";
+import { IMcpConfig, InjectMcpConfig } from "./config";
 
 @Controller("mcp")
 export class McpController {
   constructor(
     private readonly service: McpService,
     @Inject(MCP_GUARD) private readonly guard: CanActivate,
+    @InjectMcpConfig() private readonly config: IMcpConfig,
   ) {}
 
   @Get("sse")
   @ApiOperation({
     summary: "Request tool sse",
   })
-  async handleSse(@Req() req: IRequest, @Res() res: IResponse) {
-    await this.service.handleSse(req, res);
+  async handleSse(@Req() rawReq: any, @Res() rawRes: any) {
+    const request = this.config.httpAdapter.getRequest(rawReq);
+    const response = this.config.httpAdapter.getResponse(rawRes);
+    await this.service.handleSse(request, response);
   }
 
   @Post("messages")
   @ApiOperation({
     summary: "Handle sse",
   })
-  async handleSseMessages(@Req() req: IRequest, @Res() res: IResponse) {
-    await this.service.handleSseMessage(req, res);
+  async handleSseMessages(@Req() rawReq: any, @Res() rawRes: any) {
+    const request = this.config.httpAdapter.getRequest(rawReq);
+    const response = this.config.httpAdapter.getResponse(rawRes);
+    await this.service.handleSseMessage(request, response);
   }
 
   @Post("/tools")

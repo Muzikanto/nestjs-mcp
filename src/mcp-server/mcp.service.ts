@@ -8,8 +8,9 @@ import {
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { zodToJsonSchema } from "./utils/zod";
-import { IRequest, IResponse } from "./utils/http";
+import { IRequest, IResponse } from "./utils/http-adapter";
 import { IMcpResource } from "./decorators/mcp-resource.decorator";
+import { IMcpConfig, InjectMcpConfig } from "./config";
 
 export interface McpMessage {
   type: string;
@@ -34,17 +35,17 @@ export class McpService implements OnModuleInit {
     // console.log('MCP Service initialized');
   }
 
-  public async handleSse(req: IRequest, res: IResponse) {
+  public async handleSse(_: IRequest, res: IResponse) {
     try {
       const transport = new SSEServerTransport(
         "/api/mcp/messages",
-        res.raw || res,
+        res.original,
       );
       const sessionId = transport.sessionId;
 
       this.sessions.set(sessionId, transport);
 
-      res.raw.on("close", () => {
+      res.original.on("close", () => {
         this.sessions.delete(sessionId);
       });
 
@@ -60,11 +61,7 @@ export class McpService implements OnModuleInit {
     const transport = this.sessions.get(sessionId);
 
     if (transport) {
-      await transport.handlePostMessage(
-        req.raw || req,
-        res.raw || res,
-        req.body,
-      );
+      await transport.handlePostMessage(req.original, res.original, req.body);
     } else {
       res.status(500).send("Failed to handle message");
     }

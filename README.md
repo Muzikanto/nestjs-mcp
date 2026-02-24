@@ -36,6 +36,7 @@ NestJS MCP (Model Context Protocol) module — allows you to create “tools”,
 - Endpoint for calling prompt (`POST /mcp/prompts/:name`)
 - Endpoint for a list of all prompts (`GET /mcp/prompts`)  
 - Easy integration with LLM (OpenAI Function Calls)  
+- Support http adapters (default fastify)
 - Full TypeScript typing  
 
 ---
