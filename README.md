@@ -47,7 +47,7 @@ NestJS MCP (Model Context Protocol) module — allows you to create “tools”,
 yarn add @muzikanto/nestjs-mcp
 ```
 
-Peer dependencies: `@nestjs/common, @nestjs/core, reflect-metadata`
+Peer dependencies: `@nestjs/common, @nestjs/core, @nestjs/swagger, reflect-metadata`
 
 ## Usage
 
@@ -281,27 +281,32 @@ export class TestResource implements IMcpResource<{ userId: string }> {
 
 ### Auth guard
 ```ts
-import { McpModule } from '@muzikanto/nestjs-mcp';
-import { Module, CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import { IMcpTool, McpTool } from '@muzikanto/nestjs-mcp';
+import { UseGuards } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { Observable } from 'rxjs';
 
 @Injectable()
-export class TestGuard implements CanActivate {
-    canActivate(context: ExecutionContext): Promise<boolean> {
-      const request = context.switchToHttp().getRequest();
-      const authHeader = request.headers['authorization'];
-    
-      return true;
-    }
+class TestGuard implements CanActivate {
+  canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+    console.log('TestGuard called');
+    return true;
+  }
 }
 
-@Module({
-  imports: [
-    McpModule.forRoot({
-      guard: TestGuard
-    }),
-  ],
-})
-export class AppModule {}
+@UseGuard(TestGuard)
+@McpTool()
+export class TelegramSendMessageTool implements IMcpTool<
+  { chatId: string; text: string },
+  { success: boolean }
+> {
+  name = 'telegram.sendMessage';
+
+  async execute() {
+    await this.bot.telegram.sendMessage(input.chatId, input.text);
+    return { success: true };
+  }
+}
 ```
 
 ### Integration with OpenAI Function Calls

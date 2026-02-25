@@ -19,8 +19,8 @@ export const MCP_TOOL_METADATA = "mcp:tool-class";
 /**
  * Декоратор класса для MCP тулзы
  */
-export const McpTool = () => {
-  return (target: any) => {
+export const McpTool = (): ClassDecorator => {
+  return (target: Function) => {
     Injectable()(target);
     Reflect.defineMetadata(MCP_TOOL_METADATA, {}, target);
   };

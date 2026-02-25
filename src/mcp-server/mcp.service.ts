@@ -1,5 +1,12 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, OnModuleInit } from "@nestjs/common";
-import { IMcpTool } from "./decorators/mcp-tool.decorator";
+import {
+  BadRequestException,
+  ExecutionContext,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  OnModuleInit,
+} from "@nestjs/common";
+import { IMcpTool, MCP_TOOL_METADATA } from "./decorators/mcp-tool.decorator";
 import Ajv from "ajv";
 import { IMcpPrompt } from "./decorators/mcp-prompt.decorator";
 import {
@@ -10,6 +17,11 @@ import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { zodToJsonSchema } from "./utils/zod";
 import { IRequest, IResponse } from "./utils/http-adapter";
 import { IMcpResource } from "./decorators/mcp-resource.decorator";
+import { runGuards } from "./utils/run-guards";
+import { ModuleRef } from "@nestjs/core";
+import { GUARDS_METADATA } from "@nestjs/common/constants";
+import { runInterceptors } from "./utils/run-interceptors";
+import { firstValueFrom, from, of } from "rxjs";
 
 export interface McpMessage {
   type: string;
@@ -24,17 +36,29 @@ export interface McpResponse {
 
 @Injectable()
 export class McpService implements OnModuleInit {
-  private tools = new Map<string, IMcpTool>();
-  private prompts = new Map<string, IMcpPrompt>();
-  private resources = new Map<string, IMcpResource>();
+  private tools = new Map<string, { instance: IMcpTool; metatype: Function }>();
+  private prompts = new Map<
+    string,
+    { instance: IMcpPrompt; metatype: Function }
+  >();
+  private resources = new Map<
+    string,
+    { instance: IMcpResource; metatype: Function }
+  >();
   private ajv = new Ajv();
   private sessions = new Map<string, SSEServerTransport>();
+
+  constructor(protected readonly moduleRef: ModuleRef) {}
 
   onModuleInit() {
     // console.log('MCP Service initialized');
   }
 
-  public async handleSse(_: IRequest, res: IResponse) {
+  public async handleSse(
+    _: IRequest,
+    res: IResponse,
+    context: ExecutionContext,
+  ) {
     try {
       const transport = new SSEServerTransport(
         "/api/mcp/messages",
@@ -48,7 +72,7 @@ export class McpService implements OnModuleInit {
         this.sessions.delete(sessionId);
       });
 
-      const server = this.createServer();
+      const server = this.createServer(context);
       await server.connect(transport);
     } catch (e) {
       res.send(500, "Failed to initialize session");
@@ -70,7 +94,7 @@ export class McpService implements OnModuleInit {
    * Возвращает список зарегистрированных тулз
    */
   listTools() {
-    return Array.from(this.tools.values()).map((t) => ({
+    return Array.from(this.tools.values()).map(({ instance: t }) => ({
       name: t.name,
       title: t.title,
       description: t.description,
@@ -79,7 +103,7 @@ export class McpService implements OnModuleInit {
   }
 
   listPrompts() {
-    return Array.from(this.prompts.values()).map((t) => ({
+    return Array.from(this.prompts.values()).map(({ instance: t }) => ({
       name: t.name,
       description: t.description,
       title: t.title,
@@ -87,24 +111,43 @@ export class McpService implements OnModuleInit {
     }));
   }
 
-  registerTool(name: string, handler: IMcpTool) {
+  registerTool(
+    name: string,
+    handler: { instance: IMcpTool; metatype: Function },
+  ) {
     this.tools.set(name, handler);
   }
 
-  registerPrompt(name: string, handler: IMcpPrompt) {
+  registerPrompt(
+    name: string,
+    handler: { instance: IMcpPrompt; metatype: Function },
+  ) {
     this.prompts.set(name, handler);
   }
 
-  registerResource(name: string, handler: IMcpResource) {
+  registerResource(
+    name: string,
+    handler: { instance: IMcpResource; metatype: Function },
+  ) {
     this.resources.set(name, handler);
   }
 
-  getPrompt(name: string, payload: object) {
+  async executePrompt(
+    name: string,
+    payload: object,
+    context: ExecutionContext,
+  ) {
     if (!this.prompts.has(name)) {
       throw new NotFoundException("Not found prompt");
     }
 
-    const prompt = this.prompts.get(name)!;
+    const { instance: prompt, metatype } = this.prompts.get(name) || {};
+
+    if (!prompt || !metatype) {
+      throw new NotFoundException(`Unknown prompt: "${name}"`);
+    }
+
+    await runGuards(this.moduleRef, metatype, context);
 
     // Валидация через AJV, если есть inputSchema
     if (prompt.inputSchema) {
@@ -117,20 +160,37 @@ export class McpService implements OnModuleInit {
       }
     }
 
-    return prompt.execute(payload);
+    try {
+      // const result = await prompt.execute(payload);
+      const result = await runInterceptors(
+        this.moduleRef,
+        metatype,
+        context,
+        () => {
+          return from(prompt.execute(payload));
+        },
+      );
+
+      return result;
+    } catch (err: any) {
+      throw new InternalServerErrorException("Failed to execute prompt");
+    }
   }
 
   /**
    * Отправить сообщение в MCP "сервер"
    */
-  async sendMessage(
+  async executeTool(
     msg: { type: string; payload: any },
+    context: ExecutionContext,
   ) {
-    const tool = this.tools.get(msg.type);
+    const { instance: tool, metatype } = this.tools.get(msg.type) || {};
 
-    if (!tool) {
-      throw new NotFoundException(`Unknown tool: "${msg.type}"`)
+    if (!tool || !metatype) {
+      throw new NotFoundException(`Unknown tool: "${msg.type}"`);
     }
+
+    await runGuards(this.moduleRef, metatype, context);
 
     // Валидация через AJV, если есть inputSchema
     if (tool.inputSchema) {
@@ -139,23 +199,62 @@ export class McpService implements OnModuleInit {
       const valid = validate(msg.payload);
 
       if (!valid) {
-        throw new BadRequestException(this.ajv.errorsText(validate.errors))
+        throw new BadRequestException(this.ajv.errorsText(validate.errors));
       }
     }
 
     try {
-      const result = await tool.execute(msg.payload);
+      // const result = await tool.execute(msg.payload);
+      const result = await runInterceptors(
+        this.moduleRef,
+        metatype,
+        context,
+        () => {
+          return from(tool.execute(msg.payload));
+        },
+      );
 
       return result;
     } catch (err: any) {
-      throw new InternalServerErrorException('Failed to execute tool');
+      throw new InternalServerErrorException("Failed to execute tool");
     }
   }
 
-  private createServer(): McpServer {
+  async executeResource(
+    name: string,
+    uri: URL,
+    vars: Record<string, any>,
+    context: ExecutionContext,
+  ) {
+    const { instance: resource, metatype } = this.resources.get(name) || {};
+
+    if (!resource || !metatype) {
+      throw new NotFoundException(`Unknown resource: "${name}"`);
+    }
+
+    await runGuards(this.moduleRef, metatype, context);
+
+    try {
+      // const result = await resource.execute(uri, vars);
+      const result = await runInterceptors(
+        this.moduleRef,
+        metatype,
+        context,
+        () => {
+          return from(resource.execute(uri, vars));
+        },
+      );
+
+      return result;
+    } catch (err: any) {
+      throw new InternalServerErrorException("Failed to execute tool");
+    }
+  }
+
+  private createServer(context: ExecutionContext): McpServer {
     const server = new McpServer({ version: "1", name: "test" }, {});
 
-    for (const [toolName, tool] of this.tools.entries()) {
+    for (const [toolName, { instance: tool }] of this.tools.entries()) {
       server.registerTool(
         tool.name,
         {
@@ -163,11 +262,16 @@ export class McpService implements OnModuleInit {
           description: tool.description,
           inputSchema: tool.inputSchema,
         },
-        async (params: any) => {
+        async (payload: any) => {
           try {
-            const result = await tool.execute(
-              { ...params },
+            // const result = await tool.execute(
+            //   { ...payload },
+            // );
+            const observable = await this.executeTool(
+              { type: tool.name, payload },
+              context,
             );
+            const result = await firstValueFrom(observable);
 
             return {
               content: [
@@ -182,7 +286,7 @@ export class McpService implements OnModuleInit {
       );
     }
 
-    for (const [promptName, prompt] of this.prompts.entries()) {
+    for (const [promptName, { instance: prompt }] of this.prompts.entries()) {
       server.registerPrompt(
         prompt.name,
         {
@@ -190,10 +294,17 @@ export class McpService implements OnModuleInit {
           description: prompt.description,
           argsSchema: prompt.inputSchema,
         },
-        async (params) => {
+        async (payload) => {
           try {
-            const openaiMessage = await prompt.execute({ ...params });
-            const messages = openaiMessage.map((el) => ({
+            // const result = await prompt.execute({ ...params });
+            const observable = await this.executePrompt(
+              prompt.name,
+              payload,
+              context,
+            );
+            const result = await firstValueFrom(observable);
+
+            const messages = result.map((el: any) => ({
               role: (el.role === "system" ? "assistant" : el.role) as
                 | "user"
                 | "assistant",
@@ -213,7 +324,7 @@ export class McpService implements OnModuleInit {
       );
     }
 
-    for (const [_, resource] of this.resources.entries()) {
+    for (const [_, { instance: resource }] of this.resources.entries()) {
       const resourceList = resource.list;
 
       server.registerResource(
@@ -233,9 +344,16 @@ export class McpService implements OnModuleInit {
         },
         async (url: URL, variables: any) => {
           try {
-            const resources = await resource.execute(url, variables);
+            // const resources = await resource.execute(url, variables);
+            const observable = await this.executeResource(
+              resource.name,
+              url,
+              variables,
+              context,
+            );
+            const result = await firstValueFrom(observable);
 
-            return { contents: resources };
+            return { contents: result };
           } catch (e) {
             throw new Error(`Faild to execute tool ${prompt.name}`);
           }

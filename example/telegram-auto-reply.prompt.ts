@@ -1,11 +1,13 @@
 import { IMcpPrompt, McpPrompt } from '@muzikanto/nestjs-mcp';
 import z from 'zod';
+import { UseGuards } from '@nestjs/common';
 
 const schema = {
   chatId: z.string().describe('Telegram chat id'),  // строка с описанием
   text: z.string().describe('Message text'),  // строка с описанием
 };
 
+@UseGuards(ExampleGuard)
 @McpPrompt()
 export class TelegramAutoReplyPrompt implements IMcpPrompt<{ text: string; chatId: number; }> {
   name = 'telegram_auto_reply';

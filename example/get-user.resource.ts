@@ -1,5 +1,7 @@
 import { IMcpResource, McpResource } from '@muzikanto/nestjs-mcp';
+import { UseGuards } from '@nestjs/common';
 
+@UseGuards(ExampleGuard)
 @McpResource()
 export class TestResource implements IMcpResource<{ userId: string }> {
   name = 'users.get';

@@ -29,8 +29,8 @@ import { McpPromptsDto } from "./dto/McpPrompts.dto";
 import { McpPromptMessagesDto } from "./dto/McpPromptMessages.dto";
 import { Context } from "./utils/context.decorator";
 import { MCP_GUARD } from "./utils/inject-tokens";
-import { IRequest, IResponse } from "./utils/http-adapter";
 import { IMcpConfig, InjectMcpConfig } from "./config";
+import { firstValueFrom } from "rxjs";
 
 @Controller("mcp")
 export class McpController {
@@ -44,19 +44,27 @@ export class McpController {
   @ApiOperation({
     summary: "Request tool sse",
   })
-  async handleSse(@Req() rawReq: any, @Res() rawRes: any, @Context() context: ExecutionContext,) {
+  async handleSse(
+    @Req() rawReq: any,
+    @Res() rawRes: any,
+    @Context() context: ExecutionContext,
+  ) {
     await this.checkGuard(context);
 
     const request = this.config.httpAdapter.getRequest(rawReq);
     const response = this.config.httpAdapter.getResponse(rawRes);
-    await this.service.handleSse(request, response);
+    await this.service.handleSse(request, response, context);
   }
 
   @Post("messages")
   @ApiOperation({
     summary: "Handle sse",
   })
-  async handleSseMessages(@Req() rawReq: any, @Res() rawRes: any, @Context() context: ExecutionContext,) {
+  async handleSseMessages(
+    @Req() rawReq: any,
+    @Res() rawRes: any,
+    @Context() context: ExecutionContext,
+  ) {
     await this.checkGuard(context);
 
     const request = this.config.httpAdapter.getRequest(rawReq);
@@ -86,7 +94,9 @@ export class McpController {
   ) {
     await this.checkGuard(context);
 
-    return this.service.sendMessage(body);
+    const observable = await this.service.executeTool(body, context);
+    const result = await firstValueFrom(observable);
+    return result;
   }
 
   @Get("tools")
@@ -158,7 +168,8 @@ export class McpController {
   ): Promise<McpPromptMessagesDto> {
     await this.checkGuard(context);
 
-    const messages = await this.service.getPrompt(name, body);
+    const observable = await this.service.executePrompt(name, body, context);
+    const messages = await firstValueFrom(observable);
     return {
       messages,
     };

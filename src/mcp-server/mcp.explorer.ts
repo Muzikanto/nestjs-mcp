@@ -4,6 +4,7 @@ import { McpService } from "./mcp.service";
 import { MCP_TOOL_METADATA } from "./decorators/mcp-tool.decorator";
 import { MCP_PROMPT_METADATA } from "./decorators/mcp-prompt.decorator";
 import { MCP_RESOURCE_METADATA } from "./decorators/mcp-resource.decorator";
+import { GUARDS_METADATA } from "@nestjs/common/constants";
 
 @Injectable()
 export class McpExplorer implements OnModuleInit {
@@ -28,7 +29,7 @@ export class McpExplorer implements OnModuleInit {
         );
       }
 
-      this.mcpService.registerTool(instance.name, instance);
+      this.mcpService.registerTool(instance.name, { instance, metatype });
     });
 
     providers.forEach(({ instance, metatype }) => {
@@ -44,7 +45,7 @@ export class McpExplorer implements OnModuleInit {
         );
       }
 
-      this.mcpService.registerPrompt(instance.name, instance);
+      this.mcpService.registerPrompt(instance.name, { instance, metatype });
     });
 
     providers.forEach(({ instance, metatype }) => {
@@ -60,7 +61,7 @@ export class McpExplorer implements OnModuleInit {
         );
       }
 
-      this.mcpService.registerResource(instance.name, instance);
+      this.mcpService.registerResource(instance.name, { instance, metatype });
     });
   }
 }
