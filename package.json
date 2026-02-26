@@ -20,7 +20,7 @@
     "build": "tsc",
     "prepublishOnly": "npm run build",
     "lint": "prettier --check 'src/**/*.ts'",
-    "format": "prettier --write 'src/**/*.ts'",
+    "format": "prettier --write 'src/**/*.ts' 'example/**/*.ts'",
     "ch": "changeset",
     "vers": "changeset version",
     "pub": "changeset publish"
