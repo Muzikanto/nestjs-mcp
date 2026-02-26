@@ -1,5 +1,11 @@
 # @muzikanto/nestjs-mcp
 
+## 1.3.0
+
+### Minor Changes
+
+- a5c79ec: add guards and interceptors
+
 ## 1.2.0
 
 ### Minor Changes

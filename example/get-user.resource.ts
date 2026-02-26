@@ -1,6 +1,9 @@
 import { IMcpResource, McpResource } from '@muzikanto/nestjs-mcp';
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, UseInterceptors } from '@nestjs/common';
+import { ExampleInterceptor } from './example.interceptor';
+import { ExampleGuard } from './example.guard';
 
+@UseInterceptors(ExampleInterceptor)
 @UseGuards(ExampleGuard)
 @McpResource()
 export class TestResource implements IMcpResource<{ userId: string }> {

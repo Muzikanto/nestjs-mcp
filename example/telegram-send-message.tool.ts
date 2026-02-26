@@ -2,13 +2,16 @@ import { IMcpTool, McpTool } from '@muzikanto/nestjs-mcp';
 // @ts-ignore
 import { Telegraf } from 'telegraf';
 import z from 'zod';
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, UseInterceptors } from '@nestjs/common';
+import { ExampleInterceptor } from './example.interceptor';
+import { ExampleGuard } from './example.guard';
 
 const schema = {
   chatId: z.string().describe('Telegram chat id'),  // строка с описанием
   text: z.string().describe('Message text'),  // строка с описанием
 };
 
+@UseInterceptors(ExampleInterceptor)
 @UseGuards(ExampleGuard)
 @McpTool()
 export class TelegramSendMessageTool implements IMcpTool<
