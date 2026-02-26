@@ -459,20 +459,20 @@ export class TestModule {}
 ### Filters
 
 ```ts
-import { IMcpTool, McpTool } from "@muzikanto/nestjs-mcp";
+import { IMcpTool, McpTool, McpUnauthorizedException } from "@muzikanto/nestjs-mcp";
 import {
   ExceptionFilter,
   Catch,
   ArgumentsHost,
-  NotImplementedException,
   UseFilters,
 } from "@nestjs/common";
 
-@Catch(NotImplementedException)
+@Catch(McpUnauthorizedException)
 class ExampleFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     return {
-      message: (exception as Error).message,
+      isError: true,
+      text: (exception as Error).message,
     };
   }
 }

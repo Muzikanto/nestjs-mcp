@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { GUARDS_METADATA, MODULE_METADATA } from "@nestjs/common/constants";
 import { ModuleRef } from "@nestjs/core";
+import { McpUnauthorizedException } from "../exceptions";
 
 /**
  * Универсальный helper для проверки массивов NestJS Guards
@@ -40,7 +41,7 @@ export async function runGuards(
 
     const can = await guardInstance.canActivate(context);
     if (!can) {
-      throw new UnauthorizedException("Guard blocked execution");
+      throw new McpUnauthorizedException("Guard blocked execution");
     }
   }
 }
