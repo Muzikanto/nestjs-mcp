@@ -9,7 +9,7 @@ import { map } from "rxjs";
 @Injectable()
 export class ExampleInterceptor implements NestInterceptor {
   // constructor(/* Inject some modules */) {}
-  
+
   intercept(context: ExecutionContext, next: CallHandler) {
     console.log("Before execute");
 

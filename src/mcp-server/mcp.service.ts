@@ -21,7 +21,16 @@ import { runGuards } from "./utils/run-guards";
 import { ModuleRef } from "@nestjs/core";
 import { GUARDS_METADATA } from "@nestjs/common/constants";
 import { runInterceptors } from "./utils/run-interceptors";
-import { firstValueFrom, from, of } from "rxjs";
+import {
+  catchError,
+  EMPTY,
+  firstValueFrom,
+  from,
+  mergeMap,
+  of,
+  throwError,
+} from "rxjs";
+import { runFilters } from "./utils/run-fillters";
 
 export interface McpMessage {
   type: string;
@@ -162,7 +171,7 @@ export class McpService implements OnModuleInit {
 
     try {
       // const result = await prompt.execute(payload);
-      const result = await runInterceptors(
+      const stream = await runInterceptors(
         this.moduleRef,
         metatype,
         context,
@@ -171,7 +180,11 @@ export class McpService implements OnModuleInit {
         },
       );
 
-      return result;
+      return stream.pipe(
+        catchError((err) =>
+          from(runFilters(this.moduleRef, metatype, err, context)),
+        ),
+      );
     } catch (err: any) {
       throw new InternalServerErrorException("Failed to execute prompt");
     }
@@ -205,7 +218,7 @@ export class McpService implements OnModuleInit {
 
     try {
       // const result = await tool.execute(msg.payload);
-      const result = await runInterceptors(
+      const stream = await runInterceptors(
         this.moduleRef,
         metatype,
         context,
@@ -214,7 +227,11 @@ export class McpService implements OnModuleInit {
         },
       );
 
-      return result;
+      return stream.pipe(
+        catchError((err) =>
+          from(runFilters(this.moduleRef, metatype, err, context)),
+        ),
+      );
     } catch (err: any) {
       throw new InternalServerErrorException("Failed to execute tool");
     }
@@ -236,7 +253,7 @@ export class McpService implements OnModuleInit {
 
     try {
       // const result = await resource.execute(uri, vars);
-      const result = await runInterceptors(
+      const stream = await runInterceptors(
         this.moduleRef,
         metatype,
         context,
@@ -245,7 +262,11 @@ export class McpService implements OnModuleInit {
         },
       );
 
-      return result;
+      return stream.pipe(
+        catchError((err) =>
+          from(runFilters(this.moduleRef, metatype, err, context)),
+        ),
+      );
     } catch (err: any) {
       throw new InternalServerErrorException("Failed to execute tool");
     }

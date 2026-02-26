@@ -1,5 +1,11 @@
 # @muzikanto/nestjs-mcp
 
+## 1.4.1
+
+### Patch Changes
+
+- add UseFilters support
+
 ## 1.4.0
 
 ### Minor Changes

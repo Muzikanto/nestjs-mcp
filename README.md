@@ -29,6 +29,7 @@ NestJS MCP (Model Context Protocol) module — allows you to create “tools”,
   - [Interceptors](#interceptors)
     - [For one](#for-one-1)
     - [For all](#for-all-1)
+  - [Filters](#filters)
   - [Integration with OpenAI Function Calls](#integration-with-openai-function-calls)
 
 ## Features
@@ -452,6 +453,41 @@ import { APP_INTERCEPTOR } from "@nestjs/core";
   ],
 })
 export class TestModule {}
+```
+
+### Fitlers
+
+```ts
+import { IMcpTool, McpTool } from "@muzikanto/nestjs-mcp";
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  NotImplementedException,
+  UseFilters,
+} from "@nestjs/common";
+
+@Catch(NotImplementedException)
+class ExampleFilter implements ExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost) {
+    return {
+      message: (exception as Error).message,
+    };
+  }
+}
+
+@UseFilters(ExampleFilter)
+@McpTool()
+export class TelegramSendMessageTool implements IMcpTool<
+  { chatId: string; text: string },
+  { success: boolean }
+> {
+  name = "telegram.sendMessage";
+
+  async execute() {
+    throw new NotImplementedException();
+  }
+}
 ```
 
 ### Integration with OpenAI Function Calls
