@@ -456,7 +456,7 @@ import { APP_INTERCEPTOR } from "@nestjs/core";
 export class TestModule {}
 ```
 
-### Fitlers
+### Filters
 
 ```ts
 import { IMcpTool, McpTool } from "@muzikanto/nestjs-mcp";
