@@ -31,6 +31,11 @@ import {
   throwError,
 } from "rxjs";
 import { runFilters } from "./utils/run-fillters";
+import {
+  McpBadRequestException,
+  McpInternalServerErrorException,
+  McpNotFoundException,
+} from "./exceptions";
 
 export interface McpMessage {
   type: string;
@@ -147,29 +152,25 @@ export class McpService implements OnModuleInit {
     context: ExecutionContext,
   ) {
     if (!this.prompts.has(name)) {
-      throw new NotFoundException("Not found prompt");
+      throw new McpNotFoundException("Not found prompt");
     }
 
-    const { instance: prompt, metatype } = this.prompts.get(name) || {};
-
-    if (!prompt || !metatype) {
-      throw new NotFoundException(`Unknown prompt: "${name}"`);
-    }
-
-    await runGuards(this.moduleRef, metatype, context);
-
-    // Валидация через AJV, если есть inputSchema
-    if (prompt.inputSchema) {
-      const zodSchema = zodToJsonSchema(prompt.inputSchema);
-      const validate = this.ajv.compile(zodSchema);
-      const valid = validate(payload);
-
-      if (!valid) {
-        throw new NotFoundException("Invalid prompt arguments");
-      }
-    }
+    const { instance: prompt, metatype } = this.prompts.get(name)!;
 
     try {
+      await runGuards(this.moduleRef, metatype, context);
+
+      // Валидация через AJV, если есть inputSchema
+      if (prompt.inputSchema) {
+        const zodSchema = zodToJsonSchema(prompt.inputSchema);
+        const validate = this.ajv.compile(zodSchema);
+        const valid = validate(payload);
+
+        if (!valid) {
+          throw new McpBadRequestException("Invalid prompt arguments");
+        }
+      }
+
       // const result = await prompt.execute(payload);
       const stream = await runInterceptors(
         this.moduleRef,
@@ -186,7 +187,14 @@ export class McpService implements OnModuleInit {
         ),
       );
     } catch (err: any) {
-      throw new InternalServerErrorException("Failed to execute prompt");
+      const result = await runFilters(this.moduleRef, metatype, err, context);
+
+      if (result) {
+        return of(result);
+      }
+
+      // Пробрасываем дальше, чтобы Observable корректно завершился
+      return throwError(() => err);
     }
   }
 
@@ -197,26 +205,28 @@ export class McpService implements OnModuleInit {
     msg: { type: string; payload: any },
     context: ExecutionContext,
   ) {
-    const { instance: tool, metatype } = this.tools.get(msg.type) || {};
-
-    if (!tool || !metatype) {
-      throw new NotFoundException(`Unknown tool: "${msg.type}"`);
+    if (!this.tools.has(msg.type)) {
+      throw new McpNotFoundException("Not found tool");
     }
 
-    await runGuards(this.moduleRef, metatype, context);
-
-    // Валидация через AJV, если есть inputSchema
-    if (tool.inputSchema) {
-      const zodSchema = zodToJsonSchema(tool.inputSchema);
-      const validate = this.ajv.compile(zodSchema);
-      const valid = validate(msg.payload);
-
-      if (!valid) {
-        throw new BadRequestException(this.ajv.errorsText(validate.errors));
-      }
-    }
+    const { instance: tool, metatype } = this.tools.get(msg.type)!;
 
     try {
+      await runGuards(this.moduleRef, metatype, context);
+
+      // Валидация через AJV, если есть inputSchema
+      if (tool.inputSchema) {
+        const zodSchema = zodToJsonSchema(tool.inputSchema);
+        const validate = this.ajv.compile(zodSchema);
+        const valid = validate(msg.payload);
+
+        if (!valid) {
+          throw new McpBadRequestException(
+            this.ajv.errorsText(validate.errors),
+          );
+        }
+      }
+
       // const result = await tool.execute(msg.payload);
       const stream = await runInterceptors(
         this.moduleRef,
@@ -233,7 +243,14 @@ export class McpService implements OnModuleInit {
         ),
       );
     } catch (err: any) {
-      throw new InternalServerErrorException("Failed to execute tool");
+      const result = await runFilters(this.moduleRef, metatype, err, context);
+
+      if (result) {
+        return of(result);
+      }
+
+      // Пробрасываем дальше, чтобы Observable корректно завершился
+      return throwError(() => err);
     }
   }
 
@@ -243,15 +260,15 @@ export class McpService implements OnModuleInit {
     vars: Record<string, any>,
     context: ExecutionContext,
   ) {
-    const { instance: resource, metatype } = this.resources.get(name) || {};
-
-    if (!resource || !metatype) {
-      throw new NotFoundException(`Unknown resource: "${name}"`);
+    if (!this.resources.has(name)) {
+      throw new McpNotFoundException("Not found prompt");
     }
 
-    await runGuards(this.moduleRef, metatype, context);
+    const { instance: resource, metatype } = this.resources.get(name)!;
 
     try {
+      await runGuards(this.moduleRef, metatype, context);
+
       // const result = await resource.execute(uri, vars);
       const stream = await runInterceptors(
         this.moduleRef,
@@ -268,7 +285,14 @@ export class McpService implements OnModuleInit {
         ),
       );
     } catch (err: any) {
-      throw new InternalServerErrorException("Failed to execute tool");
+      const result = await runFilters(this.moduleRef, metatype, err, context);
+
+      if (result) {
+        return of(result);
+      }
+
+      // Пробрасываем дальше, чтобы Observable корректно завершился
+      return throwError(() => err);
     }
   }
 
@@ -300,8 +324,12 @@ export class McpService implements OnModuleInit {
               ],
             };
           } catch (e) {
-            console.error(e);
-            throw new Error(`Faild to execute tool ${tool.name}`);
+            throw new McpInternalServerErrorException(
+              `Faild to execute tool ${tool.name}`,
+              {
+                cause: e,
+              },
+            );
           }
         },
       );
@@ -339,7 +367,12 @@ export class McpService implements OnModuleInit {
 
             return { messages: messages };
           } catch (e) {
-            throw new Error(`Faild to execute tool ${prompt.name}`);
+            throw new McpInternalServerErrorException(
+              `Faild to execute tool ${prompt.name}`,
+              {
+                cause: e,
+              },
+            );
           }
         },
       );
@@ -376,7 +409,12 @@ export class McpService implements OnModuleInit {
 
             return { contents: result };
           } catch (e) {
-            throw new Error(`Faild to execute tool ${prompt.name}`);
+            throw new McpInternalServerErrorException(
+              `Faild to execute tool ${prompt.name}`,
+              {
+                cause: e,
+              },
+            );
           }
         },
       );
