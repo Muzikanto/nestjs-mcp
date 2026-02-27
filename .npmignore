@@ -4,3 +4,4 @@ node_mdoules
 .npmignore
 tsconfig.json
 yarn.lock
+example

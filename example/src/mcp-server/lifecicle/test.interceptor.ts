@@ -3,19 +3,17 @@ import {
   NestInterceptor,
   CallHandler,
   Injectable,
-} from "@nestjs/common";
-import { map } from "rxjs";
+} from '@nestjs/common';
+import { map } from 'rxjs';
 
 @Injectable()
-export class ExampleInterceptor implements NestInterceptor {
-  // constructor(/* Inject some modules */) {}
-
+export class TestInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler) {
-    console.log("Before execute");
+    console.log('Before execute');
 
     return next.handle().pipe(
       map((data: unknown) => {
-        console.log("After execute", data);
+        console.log('After execute', data);
 
         return data;
       }),

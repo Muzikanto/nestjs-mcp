@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { McpMessage } from "../mcp.service";
+import { McpMessage } from "../services/mcp.service";
 
 export class McpMessageDto implements McpMessage {
   @ApiProperty({ type: "string", description: "Tool name" })

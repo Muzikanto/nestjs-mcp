@@ -2,11 +2,11 @@ import {
   ExceptionFilter,
   Catch,
   ArgumentsHost,
-  NotImplementedException,
-} from "@nestjs/common";
+  UnauthorizedException,
+} from '@nestjs/common';
 
-@Catch(NotImplementedException)
-export class ExampleFilter implements ExceptionFilter {
+@Catch(UnauthorizedException)
+export class TestFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     return {
       message: (exception as Error).message,

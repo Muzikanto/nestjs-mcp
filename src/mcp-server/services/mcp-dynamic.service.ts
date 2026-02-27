@@ -1,10 +1,10 @@
 import { CanActivate, Injectable, NestInterceptor, Type } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
 
-import { McpService } from "./mcp.service";
-import { IMcpTool } from "./decorators/mcp-tool.decorator";
-import { IMcpResource } from "./decorators/mcp-resource.decorator";
-import { IMcpPrompt } from "./decorators/mcp-prompt.decorator";
+import { McpService } from "../services/mcp.service";
+import { IMcpTool } from "../decorators/mcp-tool.decorator";
+import { IMcpResource } from "../decorators/mcp-resource.decorator";
+import { IMcpPrompt } from "../decorators/mcp-prompt.decorator";
 import {
   GUARDS_METADATA,
   INTERCEPTORS_METADATA,

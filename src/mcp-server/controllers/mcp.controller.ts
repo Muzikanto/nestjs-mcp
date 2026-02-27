@@ -14,8 +14,8 @@ import {
   Req,
   Res,
 } from "@nestjs/common";
-import { McpService } from "./mcp.service";
-import { McpMessageDto } from "./dto/McpMessage.dto";
+import { McpService } from "../services/mcp.service";
+import { McpMessageDto } from "../dto/McpMessage.dto";
 import {
   ApiBadRequestResponse,
   ApiBody,
@@ -24,13 +24,18 @@ import {
   ApiOperation,
   ApiResponse,
 } from "@nestjs/swagger";
-import { McpToolsDto } from "./dto/McpTools.dto";
-import { McpPromptsDto } from "./dto/McpPrompts.dto";
-import { McpPromptMessagesDto } from "./dto/McpPromptMessages.dto";
-import { Context } from "./utils/context.decorator";
-import { MCP_GUARD } from "./utils/inject-tokens";
-import { IMcpConfig, InjectMcpConfig } from "./config";
-import { firstValueFrom } from "rxjs";
+import { McpToolsDto } from "../dto/McpTools.dto";
+import { McpPromptsDto } from "../dto/McpPrompts.dto";
+import { McpPromptMessagesDto } from "../dto/McpPromptMessages.dto";
+import { Context } from "../utils/context.decorator";
+import { MCP_GUARD } from "../utils/inject-tokens";
+import { IMcpConfig, InjectMcpConfig } from "../config";
+import { firstValueFrom, observable } from "rxjs";
+import { McpResourceDto } from "../dto/McpResource.dto";
+import { McpResourcesDto } from "../dto/McpResources.dto";
+import { McpResourceItemsDto } from "../dto/McpResourceItems.dto";
+import { McpResourceRequestDto } from "../dto/McpResourceRequest.dto";
+import { extractResourceParams } from "../utils/uri";
 
 @Controller("mcp")
 export class McpController {
@@ -39,38 +44,6 @@ export class McpController {
     @Inject(MCP_GUARD) private readonly guard: CanActivate,
     @InjectMcpConfig() private readonly config: IMcpConfig,
   ) {}
-
-  @Get("sse")
-  @ApiOperation({
-    summary: "Request tool sse",
-  })
-  async handleSse(
-    @Req() rawReq: any,
-    @Res() rawRes: any,
-    @Context() context: ExecutionContext,
-  ) {
-    await this.checkGuard(context);
-
-    const request = this.config.httpAdapter.getRequest(rawReq);
-    const response = this.config.httpAdapter.getResponse(rawRes);
-    await this.service.handleSse(request, response, context);
-  }
-
-  @Post("messages")
-  @ApiOperation({
-    summary: "Handle sse",
-  })
-  async handleSseMessages(
-    @Req() rawReq: any,
-    @Res() rawRes: any,
-    @Context() context: ExecutionContext,
-  ) {
-    await this.checkGuard(context);
-
-    const request = this.config.httpAdapter.getRequest(rawReq);
-    const response = this.config.httpAdapter.getResponse(rawRes);
-    await this.service.handleSseMessage(request, response);
-  }
 
   @Post("/tools")
   @Header("Content-Type", "application/json")
@@ -173,6 +146,73 @@ export class McpController {
     return {
       messages,
     };
+  }
+
+  @Get("resources")
+  @ApiOperation({
+    summary: "Get resources list",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "resources list",
+    type: McpResourcesDto,
+  })
+  @ApiForbiddenResponse({
+    description: "No access to method",
+  })
+  async getResources(
+    @Context() context: ExecutionContext,
+  ): Promise<McpResourcesDto> {
+    await this.checkGuard(context);
+
+    const resources = this.service.listResources();
+    return { resources };
+  }
+
+  @Post("resources/:name")
+  @ApiOperation({
+    summary: "Get resource result",
+  })
+  @ApiBody({
+    description: "Any body structure",
+    type: Object, // Указываем, что тело может быть любым объектом
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Resource result",
+    type: McpResourceItemsDto,
+  })
+  @ApiNotFoundResponse({
+    description: "Not found resource",
+  })
+  @ApiBadRequestResponse({
+    description: "Invalid resource arguments",
+  })
+  @ApiForbiddenResponse({
+    description: "No access to method",
+  })
+  async executeResource(
+    @Param("name") name: string,
+    @Body() body: McpResourceRequestDto,
+    @Context() context: ExecutionContext,
+  ): Promise<McpResourceItemsDto> {
+    await this.checkGuard(context);
+
+    const url = new URL(body.uri);
+    const resource = this.service.resources.get(name);
+    const params = resource
+      ? extractResourceParams(resource.instance.uri, body.uri)
+      : {};
+
+    const observable = await this.service.executeResource(
+      name,
+      url,
+      params,
+      context,
+    );
+    const contents = await firstValueFrom(observable);
+
+    return { contents };
   }
 
   private async checkGuard(context: ExecutionContext) {

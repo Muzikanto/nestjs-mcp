@@ -21,8 +21,10 @@ NestJS MCP (Model Context Protocol) module — allows you to create “tools”,
   - [Dynamic creation](#dynamic-creation)
   - [Calling MCP tools via HTTP](#calling-mcp-tools-via-http)
   - [Calling MCP prompt via HTTP](#obtain-prompt)
+  - [Calling MCP resource via HTTP](#obtain-resource)
   - [Obtaining all tools](#obtaining-all-tools)
   - [Obtaining all prompts](#obtaining-all-prompts)
+  - [Obtaining all resources](#obtaining-all-resources)
   - [Guards](#guards)
     - [For one](#for-one)
     - [For all](#for-all)
@@ -56,7 +58,7 @@ NestJS MCP (Model Context Protocol) module — allows you to create “tools”,
 yarn add @muzikanto/nestjs-mcp
 ```
 
-Peer dependencies: `@nestjs/common, @nestjs/core, @nestjs/swagger, reflect-metadata`
+Peer dependencies: `@nestjs/common, @nestjs/core, @nestjs/swagger, @nestjs/axios, reflect-metadata`
 
 ## Usage
 
@@ -286,9 +288,48 @@ export class TestResource implements IMcpResource<{ userId: string }> {
   title = "Get test user";
   description = "Get user by id";
 
-  async execute(url: URL, vars: { userId: string }) {
-    return [{ uri: url.href, text: `Hello ${vars.userId}` }];
+  async execute(uri: string, vars: { userId: string }) {
+    return [{ uri, text: `Hello ${vars.userId}` }];
   }
+}
+```
+
+### Calling MCP resource via HTTP
+
+POST /mcp/resources/users.get
+
+```json
+{
+  "uri": "users://user/1"
+}
+```
+
+Response
+
+```json
+{
+  "contents": [
+    {
+      "uri": "users://user/1",
+      "content": "Hello 1"
+    }
+  ]
+}
+```
+
+### Obtaining all resources
+
+GET /mcp/resources
+
+```json
+{
+  "resources": [
+    {
+      "name": "users.get",
+      "title": "Get user by id",
+      "uri": "users://user/{userId}"
+    }
+  ]
 }
 ```
 
@@ -527,9 +568,9 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
  */
 async function getMcpTools() {
   const response = await axios.get(MCP_TOOLS_URL);
-  return response.data.tools.map(el => ({ 
-    name: el.name, 
-    description: el.description, 
+  return response.data.tools.map(el => ({
+    name: el.name,
+    description: el.description,
     parameters: el.inputSchema,
   }));
 }

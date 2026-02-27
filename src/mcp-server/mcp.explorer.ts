@@ -1,6 +1,6 @@
 import { DiscoveryService } from "@nestjs/core";
 import { Injectable, OnModuleInit } from "@nestjs/common";
-import { McpService } from "./mcp.service";
+import { McpService } from "./services/mcp.service";
 import { MCP_TOOL_METADATA } from "./decorators/mcp-tool.decorator";
 import { MCP_PROMPT_METADATA } from "./decorators/mcp-prompt.decorator";
 import { MCP_RESOURCE_METADATA } from "./decorators/mcp-resource.decorator";
