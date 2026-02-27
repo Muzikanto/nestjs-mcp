@@ -23,7 +23,8 @@ export class DynamicService {
     this.mcpDynamicService.registerPrompt({
       name: 'dynamic_prompt',
       title: 'Dynamic prompt',
-      execute: () => Promise.resolve([{ role: 'assistant', content: 'test' }]),
+      execute: () =>
+        Promise.resolve({ messages: [{ role: 'assistant', content: 'test' }] }),
       guards: [TestGuard],
       interceptors: [TestInterceptor],
     });

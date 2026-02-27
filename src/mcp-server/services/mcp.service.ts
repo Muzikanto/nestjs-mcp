@@ -3,7 +3,7 @@ import { IMcpTool, IMcpToolResult } from "../decorators/mcp-tool.decorator";
 import Ajv from "ajv";
 import {
   IMcpPrompt,
-  IMcpPromptMessage,
+  IMcpPromptResult,
 } from "../decorators/mcp-prompt.decorator";
 import { zodToJsonSchema } from "../utils/zod";
 import {
@@ -60,7 +60,9 @@ export class McpService implements OnModuleInit {
       title: t.title,
       description: t.description,
       inputSchema: t.inputSchema ? zodToJsonSchema(t.inputSchema) : undefined,
-      outputSchema: t.outputSchema ? zodToJsonSchema(t.outputSchema) : undefined,
+      outputSchema: t.outputSchema
+        ? zodToJsonSchema(t.outputSchema)
+        : undefined,
     }));
   }
 
@@ -107,7 +109,7 @@ export class McpService implements OnModuleInit {
     name: string,
     payload: object,
     context: ExecutionContext,
-  ): Promise<Observable<IMcpPromptMessage[]>> {
+  ): Promise<Observable<IMcpPromptResult>> {
     if (!this.prompts.has(name)) {
       throw new McpNotFoundException("Not found prompt");
     }
@@ -164,7 +166,7 @@ export class McpService implements OnModuleInit {
   async executeTool(
     msg: { type: string; payload: any },
     context: ExecutionContext,
-  ): Promise<Observable<IMcpToolResult<object>>> {
+  ): Promise<Observable<IMcpToolResult<Record<string, unknown>>>> {
     if (!this.tools.has(msg.type)) {
       throw new McpNotFoundException("Not found tool");
     }

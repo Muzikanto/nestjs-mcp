@@ -26,25 +26,27 @@ export class ExamplePrompt implements IMcpPrompt<{
   inputSchema = schema;
 
   async execute({ text, chatId }: { text: string; chatId: number }) {
-    return [
-      {
-        role: 'system' as const,
-        content: `You are a friendly Telegram bot. Reply briefly and to the point.`,
-      },
-      {
-        role: 'user' as const,
-        content: text,
-      },
-      {
-        role: 'assistant' as const,
-        tool_call: {
-          name: 'telegram.sendMessage',
-          arguments: {
-            chatId,
-            text: '{{model_output}}',
+    return {
+      messages: [
+        {
+          role: 'system' as const,
+          content: `You are a friendly Telegram bot. Reply briefly and to the point.`,
+        },
+        {
+          role: 'user' as const,
+          content: text,
+        },
+        {
+          role: 'assistant' as const,
+          tool_call: {
+            name: 'telegram.sendMessage',
+            arguments: {
+              chatId,
+              text: '{{model_output}}',
+            },
           },
         },
-      },
-    ];
+      ],
+    };
   }
 }

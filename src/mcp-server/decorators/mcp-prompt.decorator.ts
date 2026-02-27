@@ -6,21 +6,23 @@ import type * as z3 from "zod/v3";
 type AnySchema = z3.ZodTypeAny;
 type ZodRawShapeCompat = Record<string, AnySchema>;
 
-export type IMcpPromptMessage = {
+export type IMcpPromptResult = {
+  messages: IMcpPromptResultMessage[];
+  description?: string;
+};
+
+export type IMcpPromptResultMessage = {
   role: "user" | "assistant" | "system";
   content?: string;
   tool_call?: { name: string; arguments: object };
 };
 
-export interface IMcpPrompt<
-  Payload = any,
-  Result extends IMcpPromptMessage[] = IMcpPromptMessage[],
-> {
+export interface IMcpPrompt<Payload = any> {
   name: string;
   title?: string;
   description?: string;
   inputSchema?: ZodRawShapeCompat;
-  execute(input: Payload): Promise<Result>;
+  execute(input: Payload): Promise<IMcpPromptResult>;
 }
 
 export const MCP_PROMPT_METADATA = "mcp:prompt-class";

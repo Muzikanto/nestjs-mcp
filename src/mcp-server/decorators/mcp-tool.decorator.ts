@@ -7,12 +7,16 @@ import type * as z3 from "zod/v3";
 type AnySchema = z3.ZodTypeAny;
 type ZodRawShapeCompat = Record<string, AnySchema>;
 
-export type IMcpToolResult<Result> = {
-  data?: Result;
+export type IMcpToolResult<Result extends Record<string, unknown>> = {
+  structuredContent?: Result;
   messages: Array<{ type: "text"; text: string }>;
+  isError?: boolean;
 };
 
-export interface IMcpTool<Payload = any, Result = any> {
+export interface IMcpTool<
+  Payload = any,
+  Result extends Record<string, unknown> = Record<string, unknown>,
+> {
   name: string;
   title?: string;
   description?: string;

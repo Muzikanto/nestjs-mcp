@@ -105,7 +105,7 @@ export class TelegramSendMessageTool implements IMcpTool<
   async execute(input: { chatId: string; text: string }) {
     await this.bot.telegram.sendMessage(input.chatId, input.text);
     return {
-      data: { success: true },
+      structuredContent: { success: true },
       messages: [{ type: "text", text: "Success sent to user" }],
     };
   }
@@ -130,7 +130,7 @@ POST /mcp/tools
 
 ```json
 {
-  "data": {
+  "structuredContent": {
     "success": true
   },
   "messages": [{ "type": "text", "text": "Success sent to user" }]"
@@ -188,26 +188,28 @@ export class TelegramAutoReplyPrompt implements IMcpPrompt<{
   schema = schema;
 
   async execute({ text, chatId }: { text: string; chatId: number }) {
-    return [
-      {
-        role: "system",
-        content: `You are a friendly Telegram bot. Reply briefly and to the point.`,
-      },
-      {
-        role: "user",
-        content: text,
-      },
-      {
-        role: "assistant",
-        tool_call: {
-          name: "telegram.sendMessage",
-          arguments: {
-            chatId,
-            text: "{{model_output}}",
+    return {
+      messages: [
+        {
+          role: "system",
+          content: `You are a friendly Telegram bot. Reply briefly and to the point.`,
+        },
+        {
+          role: "user",
+          content: text,
+        },
+        {
+          role: "assistant",
+          tool_call: {
+            name: "telegram.sendMessage",
+            arguments: {
+              chatId,
+              text: "{{model_output}}",
+            },
           },
         },
-      },
-    ];
+      ],
+    };
   }
 }
 ```
@@ -354,7 +356,7 @@ export class McpDynamic {
       title: "Dynamic tool",
       execute: () =>
         Promise.resolve({
-          data: "test",
+          structuredContent: { text: "test" },
           messages: [{ type: "text" as const, text: "test" }],
         }),
       guards: [ExampleGuard],
@@ -364,7 +366,8 @@ export class McpDynamic {
     this.mcpDynamicService.registerPrompt({
       name: "dynamic_prompt",
       title: "Dynamic prompt",
-      execute: () => Promise.resolve([{ role: "assistant", content: "test" }]),
+      execute: () =>
+        Promise.resolve({ messages: [{ role: "assistant", content: "test" }] }),
       guards: [ExampleGuard],
       interceptors: [ExampleInterceptor],
     });
@@ -417,7 +420,10 @@ export class TelegramSendMessageTool implements IMcpTool<
 
   async execute() {
     // await this.bot.telegram.sendMessage(input.chatId, input.text);
-    return { data: { success: true }, messages: { type: 'text', text: 'Success sent' }};
+    return {
+      structuredContent: { success: true },
+      messages: { type: "text", text: "Success sent" },
+    };
   }
 }
 ```
@@ -485,7 +491,10 @@ export class TelegramSendMessageTool implements IMcpTool<
 
   async execute() {
     // await this.bot.telegram.sendMessage(input.chatId, input.text);
-    return { success: true, messagse: [{ type: 'text', text: 'Success sent' }] };
+    return {
+      success: true,
+      messagse: [{ type: "text", text: "Success sent" }],
+    };
   }
 }
 ```
@@ -626,8 +635,8 @@ async function callMcpTool(toolName: string, payload: Record<string, any>) {
     const { name, arguments: argsJson } = message.function_call;
     const args = JSON.parse(argsJson);
 
-    const { messages, data } = await callMcpTool(name, args);
-    console.log("Result from MCP tool:", messages, data);
+    const { messages, structuredContent } = await callMcpTool(name, args);
+    console.log("Result from MCP tool:", messages, structuredContent);
   }
 })();
 ```

@@ -26,7 +26,7 @@ import {
 } from "@nestjs/swagger";
 import { McpToolsDto } from "../dto/McpTools.dto";
 import { McpPromptsDto } from "../dto/McpPrompts.dto";
-import { McpPromptMessagesDto } from "../dto/McpPromptMessages.dto";
+import { McpPromptResultDto } from "../dto/McpPrompResult.dto";
 import { Context } from "../utils/context.decorator";
 import { MCP_GUARD } from "../utils/inject-tokens";
 import { IMcpConfig, InjectMcpConfig } from "../config";
@@ -125,7 +125,7 @@ export class McpController {
   @ApiResponse({
     status: 200,
     description: "Prompt messages",
-    type: McpPromptMessagesDto,
+    type: McpPromptResultDto,
   })
   @ApiNotFoundResponse({
     description: "Not found prompt",
@@ -140,14 +140,12 @@ export class McpController {
     @Param("name") name: string,
     @Body() body: object,
     @Context() context: ExecutionContext,
-  ): Promise<McpPromptMessagesDto> {
+  ): Promise<McpPromptResultDto> {
     await this.checkGuard(context);
 
     const observable = await this.service.executePrompt(name, body, context);
-    const messages = await firstValueFrom(observable);
-    return {
-      messages,
-    };
+    const result = await firstValueFrom(observable);
+    return result;
   }
 
   @Get("resources/templates")

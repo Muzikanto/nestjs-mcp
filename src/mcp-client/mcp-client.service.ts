@@ -2,7 +2,7 @@ import { HttpService } from "@nestjs/axios";
 import { Inject, Injectable } from "@nestjs/common";
 import { McpToolsDto } from "../mcp-server/dto/McpTools.dto";
 import { McpPromptsDto } from "../mcp-server/dto/McpPrompts.dto";
-import { McpPromptMessagesDto } from "../mcp-server/dto/McpPromptMessages.dto";
+import { McpPromptResultDto } from "../mcp-server/dto/McpPrompResult.dto";
 
 @Injectable()
 export class McpClientService {
@@ -24,7 +24,7 @@ export class McpClientService {
   async getPromptByName<Payload = any>(
     promptName: string,
     params: Payload,
-  ): Promise<McpPromptMessagesDto> {
+  ): Promise<McpPromptResultDto> {
     const response = await this.httpService
       .post(`/mcp/prompts/${promptName}`, params)
       .toPromise();

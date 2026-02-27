@@ -103,7 +103,11 @@ export class McpSseService implements OnModuleInit {
             );
             const result = await firstValueFrom(observable);
 
-            return { content: result.messages };
+            return {
+              content: result.messages,
+              structuredContent: result.structuredContent,
+              isError: result.isError,
+            };
           } catch (e) {
             throw new McpInternalServerErrorException(
               `Faild to execute tool ${tool.name}`,
@@ -137,7 +141,7 @@ export class McpSseService implements OnModuleInit {
             );
             const result = await firstValueFrom(observable);
 
-            const messages = result.map((el: any) => ({
+            const messages = result.messages.map((el: any) => ({
               role: (el.role === "system" ? "assistant" : el.role) as
                 | "user"
                 | "assistant",
@@ -149,7 +153,7 @@ export class McpSseService implements OnModuleInit {
                 : { type: "text" as const, text: el.content as string },
             }));
 
-            return { messages: messages };
+            return { messages: messages, description: result.description };
           } catch (e) {
             throw new McpInternalServerErrorException(
               `Faild to execute tool ${prompt.name}`,

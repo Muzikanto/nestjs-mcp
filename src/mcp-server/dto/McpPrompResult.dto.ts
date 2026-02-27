@@ -1,11 +1,14 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { McpPromptMessageDto } from "./McpPromptMessage";
 
-export class McpPromptMessagesDto {
+export class McpPromptResultDto {
   @ApiProperty({
     type: McpPromptMessageDto,
     isArray: true,
     description: "Messages list",
   })
   messages!: McpPromptMessageDto[];
+
+  @ApiProperty({ type: "string", nullable: true })
+  description?: string;
 }

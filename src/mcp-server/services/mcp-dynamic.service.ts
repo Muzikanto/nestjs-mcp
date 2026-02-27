@@ -10,7 +10,10 @@ import {
   INTERCEPTORS_METADATA,
 } from "@nestjs/common/constants";
 
-export type IMcpDynamicTool<Input, Result> = IMcpTool<Input, Result> & {
+export type IMcpDynamicTool<
+  Input,
+  Result extends Record<string, unknown>,
+> = IMcpTool<Input, Result> & {
   guards?: Type<CanActivate>[];
   interceptors?: Type<NestInterceptor>[];
 };
@@ -33,7 +36,9 @@ export class McpDynamicService {
   ) {}
 
   /** Динамически регистрирует MCP tools */
-  async registerTool<Input, Result>(tool: IMcpDynamicTool<Input, Result>) {
+  async registerTool<Input, Result extends Record<string, unknown>>(
+    tool: IMcpDynamicTool<Input, Result>,
+  ) {
     const DynamicToolClass = class {
       name = tool.name;
       title = tool.title;

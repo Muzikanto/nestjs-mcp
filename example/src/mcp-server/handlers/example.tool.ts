@@ -34,8 +34,10 @@ export class ExampleTool implements IMcpTool<
   }): Promise<IMcpToolResult<{ success: true }>> {
     // throw new NotImplementedException();
     return {
-      data: { success: true },
-      messages: [{ type: 'text', text: `Success sent to user ${input.chatId}` }],
+      structuredContent: { success: true },
+      messages: [
+        { type: 'text', text: `Success sent to user ${input.chatId}` },
+      ],
     };
   }
 }
