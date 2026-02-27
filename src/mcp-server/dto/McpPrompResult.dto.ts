@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { McpPromptMessageDto } from "./McpPromptMessage";
+import { McpPromptMessageDto } from "./McpPromptMessage.dto";
 
 export class McpPromptResultDto {
   @ApiProperty({

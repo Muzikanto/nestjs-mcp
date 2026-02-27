@@ -81,6 +81,14 @@ export class McpSseService implements OnModuleInit {
       {},
     );
 
+    this.registerTools(server, context);
+    this.registerPrompts(server, context);
+    this.registerResources(server, context);
+
+    return server;
+  }
+
+  private registerTools(server: McpServer, context: ExecutionContext): void {
     for (const [toolName, { instance: tool }] of this.service.tools.entries()) {
       server.registerTool(
         tool.name,
@@ -119,7 +127,9 @@ export class McpSseService implements OnModuleInit {
         },
       );
     }
+  }
 
+  private registerPrompts(server: McpServer, context: ExecutionContext): void {
     for (const [
       promptName,
       { instance: prompt },
@@ -165,7 +175,12 @@ export class McpSseService implements OnModuleInit {
         },
       );
     }
+  }
 
+  private registerResources(
+    server: McpServer,
+    context: ExecutionContext,
+  ): void {
     for (const [
       _,
       { instance: resource },
@@ -212,7 +227,5 @@ export class McpSseService implements OnModuleInit {
         },
       );
     }
-
-    return server;
   }
 }
