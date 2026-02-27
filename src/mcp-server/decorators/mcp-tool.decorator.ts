@@ -1,4 +1,4 @@
-import { ToolAnnotations } from "@modelcontextprotocol/sdk/types";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { Injectable } from "@nestjs/common";
 import "reflect-metadata";
 

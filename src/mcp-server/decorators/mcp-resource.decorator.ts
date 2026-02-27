@@ -1,10 +1,10 @@
-import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
+import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol.js";
 import {
   Resource,
   ServerNotification,
   ServerRequest,
   ToolAnnotations,
-} from "@modelcontextprotocol/sdk/types";
+} from "@modelcontextprotocol/sdk/types.js";
 import { Injectable } from "@nestjs/common";
 import "reflect-metadata";
 

@@ -1,4 +1,4 @@
-import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
+import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
 import { IncomingMessage, ServerResponse } from "http";
 
 export type IRequest = {

@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "CommonJS",             // <- важно для CommonJS
-    "moduleResolution": "node",       // <- вместо bundler
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "outDir": "./dist",
     "rootDir": "./src",
     "declaration": true,
