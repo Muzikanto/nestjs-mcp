@@ -552,7 +552,7 @@ class AuthExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     return {
       isError: true,
-      text: (exception as Error).message,
+      messages: [{ type: 'text', text: (exception as Error).message || 'Internal server error' }],
     };
   }
 }

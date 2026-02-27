@@ -8,9 +8,13 @@ import {
 import { Injectable } from "@nestjs/common";
 import "reflect-metadata";
 
-export type IMcpResourceResult = {
+export type IMcpResourceResultItem = {
   uri: string;
   text: string;
+};
+
+export type IMcpResourceResult = {
+  contents: IMcpResourceResultItem[];
 };
 
 export type IMcpResourceListItem = {

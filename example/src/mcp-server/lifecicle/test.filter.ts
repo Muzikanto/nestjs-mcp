@@ -9,7 +9,8 @@ import {
 export class TestFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     return {
-      message: (exception as Error).message,
+      isError: true,
+      messages: [{ type: 'text', text: (exception as Error).message || 'Internal server error' }],
     };
   }
 }

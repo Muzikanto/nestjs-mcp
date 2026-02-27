@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class McpResourceItemDto {
+export class McpResourceResultItemDto {
   @ApiProperty({ type: "string", description: "Resource uri" })
   uri!: string;
 

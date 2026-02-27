@@ -222,7 +222,7 @@ export class McpService implements OnModuleInit {
     uri: URL,
     vars: Record<string, any>,
     context: ExecutionContext,
-  ): Promise<Observable<IMcpResourceResult[]>> {
+  ): Promise<Observable<IMcpResourceResult>> {
     if (!this.resources.has(name)) {
       throw new McpNotFoundException("Not found prompt");
     }

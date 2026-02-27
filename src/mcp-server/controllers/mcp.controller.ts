@@ -33,7 +33,7 @@ import { IMcpConfig, InjectMcpConfig } from "../config";
 import { firstValueFrom, observable } from "rxjs";
 import { McpResourceDto } from "../dto/McpResource.dto";
 import { McpResourcesDto } from "../dto/McpResources.dto";
-import { McpResourceItemsDto } from "../dto/McpResourceItems.dto";
+import { McpResourceResultDto } from "../dto/McpResourceResult.dto";
 import { McpResourceRequestDto } from "../dto/McpResourceRequest.dto";
 import { extractResourceParams } from "../utils/uri";
 import { McpToolResultDto } from "../dto/McpToolResult.dto";
@@ -180,7 +180,7 @@ export class McpController {
   @ApiResponse({
     status: 200,
     description: "Resource template result",
-    type: McpResourceItemsDto,
+    type: McpResourceResultDto,
   })
   @ApiNotFoundResponse({
     description: "Not found resource template",
@@ -192,7 +192,7 @@ export class McpController {
     @Param("name") name: string,
     @Body() body: McpResourceRequestDto,
     @Context() context: ExecutionContext,
-  ): Promise<McpResourceItemsDto> {
+  ): Promise<McpResourceResultDto> {
     await this.checkGuard(context);
 
     const url = new URL(body.uri);
@@ -207,9 +207,9 @@ export class McpController {
       params,
       context,
     );
-    const contents = await firstValueFrom(observable);
+    const result = await firstValueFrom(observable);
 
-    return { contents };
+    return result;
   }
 
   private async checkGuard(context: ExecutionContext) {

@@ -215,7 +215,7 @@ export class McpSseService implements OnModuleInit {
             );
             const result = await firstValueFrom(observable);
 
-            return { contents: result };
+            return result
           } catch (e) {
             throw new McpInternalServerErrorException(
               `Faild to execute tool ${prompt.name}`,
