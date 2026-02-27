@@ -39,9 +39,9 @@ NestJS MCP (Model Context Protocol) module — allows you to create “tools”,
 - Automatic detection of all providers (tools) in the module
 - Input data validation
 - SSE endpoints for MCP (`GET /mcp/sse, POST /mcp/messages`)
-- Endpoint for calling tool (`POST /mcp/toos`)
+- Endpoint for calling a tool (`POST /mcp/tools`)
 - Endpoint for a list of all tools (`GET /mcp/tools`)
-- Endpoint for calling prompt (`POST /mcp/prompts/:name`)
+- Endpoint for calling a prompt (`POST /mcp/prompts/:name`)
 - Endpoint for a list of all prompts (`GET /mcp/prompts`)
 - Easy integration with LLM (OpenAI Function Calls)
 - Support http adapters (default fastify)
@@ -86,7 +86,7 @@ import { Telegraf } from "telegraf";
 import z from "zod";
 
 const schema = {
-  chatId: z.string().describe("Telegram chat id"), // строка с описанием
+  chatId: z.number().describe("Telegram chat id"), // строка с описанием
   text: z.string().describe("Message text"), // строка с описанием
 };
 
@@ -110,7 +110,7 @@ export class TelegramSendMessageTool implements IMcpTool<
 
 ### Calling MCP tools via HTTP
 
-POST /mcp
+POST /mcp/tools
 
 ```json
 {
@@ -134,29 +134,31 @@ POST /mcp
 
 ### Obtaining all tools
 
-GET /mcp/tool
+GET /mcp/tools
 
 ```json
-[
-  {
-    "name": "telegram.sendMessage",
-    "description": "Sent message via Telegram",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "chatId": {
-          "type": "number",
-          "description": "Telegram chat ID"
+{
+  "tools": [
+    {
+      "name": "telegram.sendMessage",
+      "description": "Sent message via Telegram",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "chatId": {
+            "type": "number",
+            "description": "Telegram chat ID"
+          },
+          "text": {
+            "type": "string",
+            "description": "Message text"
+          }
         },
-        "text": {
-          "type": "string",
-          "description": "Message text"
-        }
-      },
-      "required": ["chatId", "text"]
+        "required": ["chatId", "text"]
+      }
     }
-  }
-]
+  ]
+}
 ```
 
 ### Create MCP prompt
@@ -166,7 +168,7 @@ import { IMcpPrompt, McpPrompt } from "@muzikanto/nestjs-mcp";
 import z from "zod";
 
 const schema = {
-  chatId: z.string().describe("Telegram chat id"), // строка с описанием
+  chatId: z.number().describe("Telegram chat id"), // строка с описанием
   text: z.string().describe("Message text"), // строка с описанием
 };
 
@@ -177,7 +179,7 @@ export class TelegramAutoReplyPrompt implements IMcpPrompt<{
 }> {
   name = "telegram_auto_reply";
   description =
-    "Generate a short, fiendly reply to an incoming Telegram message and send it back to the same chat using teegram.sendMessage tool";
+    "Generate a short, friendly reply to an incoming Telegram message and send it back to the same chat using telegram.sendMessage tool";
   schema = schema;
 
   async execute({ text, chatId }: { text: string; chatId: number }) {
@@ -210,26 +212,28 @@ export class TelegramAutoReplyPrompt implements IMcpPrompt<{
 GET /mcp/prompts
 
 ```json
-[
-  {
-    "name": "telegram_auto_reply",
-    "description": "Generate a short, fiendly reply to an incoming Telegram message and send it back to the same chat using teegram.sendMessage tool",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "chatId": {
-          "type": "number",
-          "description": "Telegram chat ID"
+{
+  "prompts": [
+    {
+      "name": "telegram_auto_reply",
+      "description": "Generate a short, friendly reply to an incoming Telegram message and send it back to the same chat using telegram.sendMessage tool",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "chatId": {
+            "type": "number",
+            "description": "Telegram chat ID"
+          },
+          "text": {
+            "type": "string",
+            "description": "Message text"
+          }
         },
-        "text": {
-          "type": "string",
-          "description": "Message text"
-        }
-      },
-      "required": ["chatId", "text"]
+        "required": ["chatId", "text"]
+      }
     }
-  }
-]
+  ]
+}
 ```
 
 ### Calling MCP prompt via HTTP
@@ -350,7 +354,7 @@ class TestGuard implements CanActivate {
   }
 }
 
-@UseGuard(TestGuard)
+@UseGuards(TestGuard)
 @McpTool()
 export class TelegramSendMessageTool implements IMcpTool<
   { chatId: string; text: string },
@@ -359,7 +363,7 @@ export class TelegramSendMessageTool implements IMcpTool<
   name = "telegram.sendMessage";
 
   async execute() {
-    await this.bot.telegram.sendMessage(input.chatId, input.text);
+    // await this.bot.telegram.sendMessage(input.chatId, input.text);
     return { success: true };
   }
 }
@@ -418,7 +422,7 @@ export class ExampleInterceptor implements NestInterceptor {
   }
 }
 
-@UseInterceptors(TestInterceptor)
+@UseInterceptors(ExampleInterceptor)
 @McpTool()
 export class TelegramSendMessageTool implements IMcpTool<
   { chatId: string; text: string },
@@ -427,7 +431,7 @@ export class TelegramSendMessageTool implements IMcpTool<
   name = "telegram.sendMessage";
 
   async execute() {
-    await this.bot.telegram.sendMessage(input.chatId, input.text);
+    // await this.bot.telegram.sendMessage(input.chatId, input.text);
     return { success: true };
   }
 }
@@ -447,7 +451,7 @@ import { APP_INTERCEPTOR } from "@nestjs/core";
     McpModule.forRoot({
       providers: [
         ToolWithoutInterceptors,
-        TestGuard,
+        TestInterceptor,
         { provide: APP_INTERCEPTOR, useExisting: TestInterceptor },
       ],
     }),
@@ -459,7 +463,11 @@ export class TestModule {}
 ### Filters
 
 ```ts
-import { IMcpTool, McpTool, McpUnauthorizedException } from "@muzikanto/nestjs-mcp";
+import {
+  IMcpTool,
+  McpTool,
+  McpUnauthorizedException,
+} from "@muzikanto/nestjs-mcp";
 import {
   ExceptionFilter,
   Catch,
@@ -467,8 +475,8 @@ import {
   UseFilters,
 } from "@nestjs/common";
 
-@Catch(McpUnauthorizedException)
-class ExampleFilter implements ExceptionFilter {
+@Catch(NotImplementedException)
+class NotImplExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     return {
       isError: true,
@@ -477,7 +485,18 @@ class ExampleFilter implements ExceptionFilter {
   }
 }
 
-@UseFilters(ExampleFilter)
+@Catch(McpUnauthorizedException)
+class AuthExceptionFilter implements ExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost) {
+    return {
+      isError: true,
+      text: (exception as Error).message,
+    };
+  }
+}
+
+@UseGuards(AuthGuard)
+@UseFilters(AuthExceptionFilter, NotImplExceptionFilter)
 @McpTool()
 export class TelegramSendMessageTool implements IMcpTool<
   { chatId: string; text: string },
@@ -508,14 +527,18 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
  */
 async function getMcpTools() {
   const response = await axios.get(MCP_TOOLS_URL);
-  return response.data.tools.map(el => ({ name: el.name, description: el.description, parameters: el.inputSchema }));
+  return response.data.tools.map(el => ({ 
+    name: el.name, 
+    description: el.description, 
+    parameters: el.inputSchema,
+  }));
 }
 
 /**
  * Get all prompts
  */
 async function getMcpPrompt() {
-  const response = await axios.post(MCP_TELEGRAM_PROMPT_URL, {/* propmpt generation arguments */});
+  const response = await axios.post(MCP_TELEGRAM_PROMPT_URL, {/* prompt generation arguments */});
   return response.data;
 
 /**
