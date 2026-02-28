@@ -1,5 +1,11 @@
 # @muzikanto/nestjs-mcp
 
+## 1.7.1
+
+### Patch Changes
+
+- add exports for (client, server) and update example (add openai)
+
 ## 1.7.0
 
 ### Minor Changes
