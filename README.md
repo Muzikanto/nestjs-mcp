@@ -50,6 +50,13 @@ NestJS MCP (Model Context Protocol) module — allows you to create “tools”,
 - Full TypeScript typing
 - Support `@UseGuards`, `@UseInterceptors`, `@UseFilters`
 
+## Examples
+
+- [Example server](https://github.com/Muzikanto/nestjs-mcp/tree/main/example)
+- [Example librechat](https://github.com/Muzikanto/nestjs-mcp/tree/main/example/librechat)
+- [Example openai request](https://github.com/Muzikanto/nestjs-mcp/blob/main/example/src/openai/openai.service.ts)
+- [Example mcp handlers](https://github.com/Muzikanto/nestjs-mcp/tree/main/example/src/mcp-server/handlers)
+
 ---
 
 ## Installation
