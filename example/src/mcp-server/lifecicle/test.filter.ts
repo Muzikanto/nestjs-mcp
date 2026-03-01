@@ -10,7 +10,7 @@ export class AuthFilter implements ExceptionFilter {
     return {
       isError: true,
       messages: [
-        { role: 'user', content: (exception as Error).message || 'No access' },
+        { type: 'text', text: (exception as Error).message || 'No access' },
       ],
     };
   }
@@ -23,9 +23,25 @@ export class BadRequestFilter implements ExceptionFilter {
       isError: true,
       messages: [
         {
-          role: 'user',
-          content: (exception as Error).message || 'invalid arguments',
+          type: 'text',
+          text: (exception as Error).message || 'invalid arguments',
         },
+      ],
+    };
+  }
+}
+
+@Catch()
+export class TelegramNoChatFilter implements ExceptionFilter {
+  catch(exception: Error, host: ArgumentsHost) {
+    if (!exception.message.includes('chat not found')) {
+      throw exception;
+    }
+  
+    return {
+      isError: true,
+      messages: [
+        { type: 'text', text: 'Failed to sent message. No access to chat' },
       ],
     };
   }

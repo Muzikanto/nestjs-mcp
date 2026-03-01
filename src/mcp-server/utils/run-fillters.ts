@@ -37,10 +37,14 @@ export async function runFilters(
     const filterExceptions = (Reflect.getMetadata(
       FILTER_CATCH_EXCEPTIONS,
       Filter,
-    ) || []) as Function[];
+    ) ) as Function[] | undefined;
+
+    if (!filterExceptions) {
+      continue;
+    }
 
     if (
-      !filterExceptions ||
+      filterExceptions.length > 0 &&
       !filterExceptions.some((ex) => (exception as Error) instanceof ex)
     ) {
       continue;

@@ -8,7 +8,7 @@ import {
 import { TestGuard } from '../lifecicle/test.guard';
 import { z } from 'zod/v3';
 import { TestInterceptor } from '../lifecicle/test.interceptor';
-import { BadRequestFilter, AuthFilter } from '../lifecicle/test.filter';
+import { BadRequestFilter, AuthFilter, TelegramNoChatFilter } from '../lifecicle/test.filter';
 import { Telegraf } from 'telegraf';
 import { InjectBot } from 'nestjs-telegraf';
 
@@ -21,7 +21,7 @@ const outputSchema = {
   success: z.boolean().describe('Success'),
 };
 
-@UseFilters(AuthFilter, BadRequestFilter)
+@UseFilters(AuthFilter, BadRequestFilter, TelegramNoChatFilter)
 @UseInterceptors(TestInterceptor)
 @UseGuards(TestGuard)
 @McpTool()

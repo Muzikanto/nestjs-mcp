@@ -35,6 +35,7 @@ export class OpenAiService {
     }
 
     const completion = await this.handleMessage(messages);
+    // console.log(completion.choices.map(el => el.message))
     const completion2 = await this.handleTool(completion);
 
     return completion2.choices[0].message;

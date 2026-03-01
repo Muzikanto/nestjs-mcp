@@ -32,7 +32,17 @@ export class TelegramService {
     try {
       const text = ctx.message && 'text' in ctx.message ? ctx.message.text : '';
 
-      if (!text.startsWith('/')) return;
+      if (!text.startsWith('/')) {
+        const result = await this.openAiService.execute([{
+          role: 'user',
+          content: text,
+        }]);
+        
+        if (result.content) {
+          await ctx.reply(result.content);
+        }
+        return;
+      }
 
       const commandName = text.split(' ')[0].replace('/', '');
       const commandText = text.split(' ').slice(1).join(' ');
